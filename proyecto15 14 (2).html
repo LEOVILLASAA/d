@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago con QR - Frenos Automotriz LVS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .invoice-info {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .invoice-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #667eea;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid #667eea;
+        }
+
+        .qr-section {
+            margin: 30px 0;
+        }
+
+        .qr-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .qr-code img, .qr-code canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .scan-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            margin: 10px;
+        }
+
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .scan-button:active {
+            transform: translateY(0);
+        }
+
+        .scan-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .upload-section {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-label {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .upload-label:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .instructions h4 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ol {
+            color: #333;
+            line-height: 1.6;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .video-container {
+            display: none;
+            margin: 20px 0;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 15px;
+        }
+
+        .qr-result {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .qr-result h4 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+
+        .qr-result pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-size: 14px;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .qr-code {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔧 Frenos Automotriz LVS</div>
+        <div class="subtitle">Sistema de Pago con QR</div>
+        
+        <div class="invoice-info">
+            <h3>📄 Información de la Boleta</h3>
+            <div class="info-row">
+                <span>Cliente:</span>
+                <span id="cliente">Leonard Villacorta Saavedra</span>
+            </div>
+            <div class="info-row">
+                <span>Producto:</span>
+                <span id="producto">Pastilla de freno 5L (x2)</span>
+            </div>
+            <div class="info-row">
+                <span>Fecha:</span>
+                <span id="fecha">28/7/2025</span>
+            </div>
+            <div class="info-row">
+                <span>Total a Pagar:</span>
+                <span id="total">S/. 160.00</span>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <div class="qr-container">
+                <h3>💳 Código QR para Pago</h3>
+                <div class="qr-code" id="qr-display">
+                    <div style="color: #666;">Generando QR...</div>
+                </div>
+                <p style="color: #666; margin-bottom: 20px;">Escanea este código con tu app de Yape</p>
+                
+                <button class="scan-button" onclick="startCamera()">📱 Escanear QR</button>
+                <button class="scan-button" onclick="document.getElementById('file-input').click()">📁 Subir Imagen QR</button>
+                <button class="scan-button" onclick="generateNewQR()">🔄 Generar Nuevo QR</button>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(event)">
+            <label for="file-input" class="upload-label">📄 Seleccionar Archivo</label>
+            <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                Sube un archivo PDF o imagen que contenga códigos QR para procesar el pago
+            </p>
+        </div>
+
+        <div class="video-container" id="video-container">
+            <video id="video" autoplay></video>
+            <button class="scan-button" onclick="stopCamera()" style="background: #dc3545;">❌ Detener Cámara</button>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="qr-result" id="qr-result">
+            <h4>✅ Código QR Detectado</h4>
+            <p><strong>Contenido:</strong></p>
+            <pre id="qr-content"></pre>
+            <button class="scan-button" onclick="processPayment()" style="background: #28a745;">💰 Procesar Pago</button>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 Instrucciones de Uso</h4>
+            <ol>
+                <li>Abre tu aplicación Yape en tu celular</li>
+                <li>Selecciona "Escanear QR" o "Yapear"</li>
+                <li>Escanea el código QR mostrado arriba</li>
+                <li>Confirma el monto de S/. 160.00</li>
+                <li>Completa el pago en tu aplicación</li>
+                <li>Guarda el comprobante de pago</li>
+            </ol>
+            <h4 style="margin-top: 20px;">📄 Procesamiento de Archivos</h4>
+            <ol>
+                <li>Haz clic en "Seleccionar Archivo"</li>
+                <li>Elige un archivo PDF o imagen que contenga códigos QR</li>
+                <li>El sistema escaneará automáticamente el contenido</li>
+                <li>Si encuentra un QR, lo procesará automáticamente</li>
+                <li>Sigue las instrucciones para completar el pago</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Librerías externas -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+
+    <script>
+        let stream = null;
+        let scanning = false;
+        let currentInvoiceData = {
+            cliente: 'Leonard Villacorta Saavedra',
+            producto: 'Pastilla de freno 5L (x2)',
+            fecha: '28/7/2025',
+            total: 160.00,
+            moneda: 'PEN'
+        };
+
+        // Configurar PDF.js
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        // Inicializar la página
+        window.onload = function() {
+            generateYapeQR();
+        };
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                if (type !== 'info') {
+                    status.style.display = 'none';
+                }
+            }, 5000);
+        }
+
+        function showLoading(message) {
+            showStatus(`<span class="loading"></span>${message}`, 'info');
+        }
+
+        // Generar QR de Yape
+        async function generateYapeQR() {
+            try {
+                showLoading('Generando código QR de Yape...');
+                
+                // Crear datos del QR de Yape (formato simplificado)
+                const yapeData = {
+                    merchant: 'Frenos Automotriz LVS',
+                    amount: currentInvoiceData.total,
+                    currency: currentInvoiceData.moneda,
+                    reference: `Boleta-${Date.now()}`,
+                    description: currentInvoiceData.producto
+                };
+                
+                const qrText = `YAPE:${JSON.stringify(yapeData)}`;
+                
+                // Usar qrcode-generator
+                const qr = qrcode(0, 'M');
+                qr.addData(qrText);
+                qr.make();
+                
+                const qrDisplay = document.getElementById('qr-display');
+                qrDisplay.innerHTML = qr.createImgTag(4, 8);
+                
+                showStatus('Código QR de Yape generado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error generando QR:', error);
+                showStatus('Error al generar el código QR', 'error');
+            }
+        }
+
+        function generateNewQR() {
+            generateYapeQR();
+        }
+
+        async function startCamera() {
+            try {
+                const videoContainer = document.getElementById('video-container');
+                const video = document.getElementById('video');
+                
+                showLoading('Iniciando cámara...');
+                
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                });
+                
+                video.srcObject = stream;
+                videoContainer.style.display = 'block';
+                scanning = true;
+                
+                showStatus('Cámara iniciada. Apunta al código QR para escanearlo.', 'success');
+                
+                // Iniciar el escaneo
+                video.addEventListener('loadedmetadata', () => {
+                    scanQRCode();
+                });
+                
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                showStatus('Error al acceder a la cámara. Verifica los permisos.', 'error');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            const videoContainer = document.getElementById('video-container');
+            videoContainer.style.display = 'none';
+            scanning = false;
+            
+            showStatus('Cámara detenida.', 'success');
+        }
+
+        function scanQRCode() {
+            if (!scanning) return;
+            
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                
+                if (typeof jsQR !== 'undefined') {
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (code) {
+                        handleQRResult(code.data);
+                        stopCamera();
+                        return;
+                    }
+                }
+            }
+            
+            requestAnimationFrame(scanQRCode);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.type === 'application/pdf') {
+                handlePDFUpload(file);
+            } else if (file.type.startsWith('image/')) {
+                handleImageUpload(file);
+            } else {
+                showStatus('Tipo de archivo no soportado. Use PDF o imágenes.', 'error');
+            }
+        }
+
+        function handleImageUpload(file) {
+            showLoading('Procesando imagen...');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    context.drawImage(img, 0, 0);
+                    
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    if (typeof jsQR !== 'undefined') {
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (code) {
+                            handleQRResult(code.data);
+                        } else {
+                            showStatus('No se pudo detectar un código QR en la imagen.', 'error');
+                        }
+                    } else {
+                        showStatus('Biblioteca de escaneo no disponible.', 'error');
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handlePDFUpload(file) {
+            showLoading('Procesando PDF, buscando códigos QR...');
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                let qrFound = false;
+                
+                // Procesar cada página del PDF
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    // Buscar QR en esta página
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    if (typeof jsQR !== 'undefined') {
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (code) {
+                            showStatus(`Código QR encontrado en la página ${pageNum}`, 'success');
+                            handleQRResult(code.data);
+                            qrFound = true;
+                            
+                            // Intentar extraer información de la boleta del PDF
+                            try {
+                                const textContent = await page.getTextContent();
+                                const pageText = textContent.items.map(item => item.str).join(' ');
+                                extractInvoiceData(pageText);
+                            } catch (textError) {
+                                console.warn('No se pudo extraer texto del PDF:', textError);
+                            }
+                            
+                            break;
+                        }
+                    }
+                }
+                
+                if (!qrFound) {
+                    showStatus('No se encontraron códigos QR en el PDF.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error procesando PDF:', error);
+                showStatus('Error al procesar el archivo PDF.', 'error');
+            }
+        }
+
+        function extractInvoiceData(text) {
+            try {
+                // Patrones para extraer información común de boletas
+                const patterns = {
+                    cliente: /(?:cliente|client|nombre):\s*([^\n\r]+)/i,
+                    total: /(?:total|amount|monto):\s*(?:s\/\.?\s*)?(\d+(?:\.\d{2})?)/i,
+                    fecha: /(?:fecha|date):\s*(\d{1,2}\/\d{1,2}\/\d{4})/i,
+                    producto: /(?:producto|product|descripci[óo]n):\s*([^\n\r]+)/i
+                };
+                
+                let updated = false;
+                
+                for (const [field, pattern] of Object.entries(patterns)) {
+                    const match = text.match(pattern);
+                    if (match) {
+                        const value = match[1].trim();
+                        if (field === 'total') {
+                            currentInvoiceData[field] = parseFloat(value);
+                        } else {
+                            currentInvoiceData[field] = value;
+                        }
+                        updated = true;
+                    }
+                }
+                
+                if (updated) {
+                    updateInvoiceDisplay();
+                    generateYapeQR(); // Regenerar QR con nueva información
+                    showStatus('Información de la boleta actualizada desde el PDF', 'success');
+                }
+                
+            } catch (error) {
+                console.warn('Error extrayendo datos de la boleta:', error);
+            }
+        }
+
+        function updateInvoiceDisplay() {
+            document.getElementById('cliente').textContent = currentInvoiceData.cliente;
+            document.getElementById('producto').textContent = currentInvoiceData.producto;
+            document.getElementById('fecha').textContent = currentInvoiceData.fecha;
+            document.getElementById('total').textContent = `S/. ${currentInvoiceData.total.toFixed(2)}`;
+        }
+
+        function handleQRResult(data) {
+            console.log('QR detectado:', data);
+            
+            // Mostrar el resultado
+            const qrResult = document.getElementById('qr-result');
+            const qrContent = document.getElementById('qr-content');
+            
+            qrContent.textContent = data;
+            qrResult.style.display = 'block';
+            
+            showStatus('¡Código QR detectado exitosamente!', 'success');
+            
+            // Analizar el contenido del QR
+            analyzeQRContent(data);
+        }
+
+        function analyzeQRContent(data) {
+            try {
+                // Intentar detectar diferentes tipos de QR
+                if (data.startsWith('YAPE:')) {
+                    const yapeData = JSON.parse(data.substring(5));
+                    showStatus(`QR de Yape detectado - Monto: S/. ${yapeData.amount}`, 'info');
+                } else if (data.startsWith('http')) {
+                    showStatus('QR con URL detectado - Puede ser un enlace de pago', 'info');
+                } else if (data.includes('amount') || data.includes('monto')) {
+                    showStatus('QR de pago detectado', 'info');
+                } else {
+                    showStatus('QR genérico detectado', 'info');
+                }
+            } catch (error) {
+                console.log('QR no es JSON válido, contenido plano:', data);
+            }
+        }
+
+        function processPayment() {
+            const qrContent = document.getElementById('qr-content').textContent;
+            
+            showLoading('Procesando pago...');
+            
+            // Simular procesamiento de pago
+            setTimeout(() => {
+                showStatus('¡Pago procesado exitosamente! Guarda tu comprobante.', 'success');
+                
+                // Aquí podrías integrar con una API real de pagos
+                console.log('Procesando pago con datos:', {
+                    qrContent: qrContent,
+                    invoiceData: currentInvoiceData
+                });
+            }, 2000);
+        }
+
+        // Manejar errores globales
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Error:', msg, 'at', url, ':', lineNo);
+            showStatus('Ha ocurrido un error inesperado.', 'error');
+            return false;
+        };
+    </script>
+</body>
+</html>
